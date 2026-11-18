@@ -63,7 +63,8 @@ del plan y desde la ficha se puede subir: así se progresa.
 ## Cómo ponerlo en marcha
 
 - **En el ordenador**: doble clic en `index.html`.
-- **Publicado**: GitHub Pages desde la raíz de `main`.
+- **Publicado**: <https://jmorecru.github.io/ejercicios/> (GitHub Pages desde la raíz
+  de `main`).
 - **Al desplegar, sube la versión** en dos sitios: `VERSION` y `VERSION_FECHA` en
   [js/version.js](js/version.js), y el `?v=` de los `<script>` y del `<link>` de
   [index.html](index.html).

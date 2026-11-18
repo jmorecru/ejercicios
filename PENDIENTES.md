@@ -1,6 +1,7 @@
 # Pendientes
 
-Última revisión: **18 de noviembre de 2026**. Versión: **1.0** (sin publicar todavía).
+Última revisión: **18 de noviembre de 2026**. Versión: **1.0**, publicada en
+<https://jmorecru.github.io/ejercicios/>.
 
 > **Al desplegar, subir la versión.** `VERSION` y `VERSION_FECHA` en
 > [js/version.js](js/version.js) y el `?v=...` de los `<script>` y del `<link>` de
@@ -10,8 +11,7 @@
 
 ## 🎯 Lo siguiente: probarlo en el móvil
 
-1. **Crear el repositorio** `ejercicios` en GitHub (público) y activar GitHub Pages desde
-   la raíz de `main`.
+1. ~~Crear el repositorio y activar GitHub Pages~~ (hecho el 18-11-2026).
 2. **Probar en el iPhone**, añadida a la pantalla de inicio:
    - que suenen los pitidos **con el interruptor de silencio puesto**;
    - que hable la voz (y si la voz en español suena bien);
