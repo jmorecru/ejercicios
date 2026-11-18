@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231e3a5f'/%3E%3Crect x='5' y='11' width='4' height='10' rx='1' fill='%23fff'/%3E%3Crect x='23' y='11' width='4' height='10' rx='1' fill='%23fff'/%3E%3Crect x='9' y='14.5' width='14' height='3' fill='%2353c4cc'/%3E%3C/svg%3E">
+<title>Ejercicios en casa</title>
+
+<!-- Para anadirla a la pantalla de inicio como si fuera una app. iOS mira las
+     etiquetas apple-* y un PNG de 180 aparte del manifiesto. -->
+<meta name="theme-color" content="#1e3a5f">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ejercicios">
+
+<link rel="stylesheet" href="styles.css?v=1.0">
+</head>
+<body>
+
+<main id="app">
+  <!-- Inicio: elegir el dia -->
+  <section id="inicio" class="pantalla">
+    <header class="cabecera">
+      <h1>Ejercicios en casa</h1>
+      <p class="sub">¿Qué toca hoy?</p>
+    </header>
+    <div id="dias" class="dias"></div>
+    <p id="ultimo" class="ultimo"></p>
+
+    <details class="bloque">
+      <summary>Consejos</summary>
+      <ul id="consejos"></ul>
+    </details>
+
+    <details class="bloque">
+      <summary>Ajustes del temporizador</summary>
+      <label class="fila-ajuste"><span>Pitidos</span><input type="checkbox" id="pref-sonido"></label>
+      <label class="fila-ajuste"><span>Voz que avisa</span><input type="checkbox" id="pref-voz"></label>
+      <div class="fila-ajuste">
+        <span>Segundos por repetición<br><small>Con tempo lento, súbelo</small></span>
+        <span class="paso">
+          <button type="button" data-ritmo="-1" aria-label="Menos">−</button>
+          <b id="pref-ritmo">3</b>
+          <button type="button" data-ritmo="1" aria-label="Más">+</button>
+        </span>
+      </div>
+      <p class="nota">En iPhone la web no puede vibrar: los avisos son pitidos, voz y color de pantalla.</p>
+    </details>
+
+    <p class="aviso">No sustituye el consejo médico. Si notas dolor, hormigueo o mareo, para.</p>
+    <p class="version">Versión <span id="ver"></span></p>
+  </section>
+
+  <!-- Un dia: lista de ejercicios -->
+  <section id="dia" class="pantalla" hidden>
+    <header class="barra">
+      <a href="#" class="volver" aria-label="Volver">‹</a>
+      <div>
+        <h2 id="dia-titulo"></h2>
+        <p id="dia-resumen" class="sub"></p>
+      </div>
+    </header>
+    <p id="dia-calentamiento" class="calentamiento"></p>
+    <ol id="lista" class="lista"></ol>
+  </section>
+
+  <!-- Ficha de un ejercicio -->
+  <section id="ficha" class="pantalla" hidden>
+    <header class="barra">
+      <a href="#" id="ficha-volver" class="volver" aria-label="Volver">‹</a>
+      <div>
+        <p id="ficha-num" class="sub"></p>
+        <h2 id="ficha-nombre"></h2>
+      </div>
+    </header>
+    <figure class="foto">
+      <img id="ficha-img" alt="">
+      <figcaption id="ficha-nota"></figcaption>
+    </figure>
+    <p id="ficha-confirmar" class="confirmar" hidden>Repásalo con un profesional antes de hacerlo.</p>
+    <p id="ficha-objetivo" class="objetivo"></p>
+    <p id="ficha-desc" class="desc"></p>
+    <div id="ficha-enlaces" class="enlaces"></div>
+    <div id="ficha-ajustes" class="ajustes"></div>
+    <button type="button" id="empezar" class="grande">▶ Empezar <span id="ficha-dur"></span></button>
+  </section>
+</main>
+
+<!-- Temporizador a pantalla completa -->
+<div id="crono" class="crono" hidden>
+  <div class="crono-top">
+    <span id="crono-nombre"></span>
+    <button type="button" id="crono-parar" aria-label="Parar">✕</button>
+  </div>
+  <div id="crono-marcha">
+    <div id="crono-fase" class="crono-fase"></div>
+    <div id="crono-tiempo" class="crono-tiempo"></div>
+    <div id="crono-detalle" class="crono-detalle"></div>
+    <div class="progreso"><div id="crono-barra"></div></div>
+    <img id="crono-img" class="crono-img" alt="">
+    <div id="crono-luego" class="crono-luego"></div>
+    <div class="crono-botones">
+      <button type="button" id="crono-pausa">⏸ Pausa</button>
+      <button type="button" id="crono-mas">+10 s</button>
+      <button type="button" id="crono-hecho">Hecho ⏭</button>
+    </div>
+  </div>
+  <div id="crono-fin" hidden>
+    <div class="crono-fase">¡Terminado!</div>
+    <p id="fin-texto" class="crono-detalle"></p>
+    <div id="fin-cuenta" class="crono-tiempo"></div>
+    <p id="fin-cuenta-txt" class="crono-luego"></p>
+    <button type="button" id="fin-siguiente" class="grande"></button>
+    <button type="button" id="fin-volver" class="secundario">Volver a la lista</button>
+  </div>
+</div>
+
+<div id="visor" class="visor" hidden><img id="visor-img" alt=""></div>
+
+<script src="data/ejercicios.js?v=1.0"></script>
+<script src="js/version.js?v=1.0"></script>
+<script src="js/pautas.js?v=1.0"></script>
+<script src="js/sonido.js?v=1.0"></script>
+<script src="js/app.js?v=1.0"></script>
+</body>
+</html>

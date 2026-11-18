@@ -1,0 +1,17 @@
+# Sistema operativo
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Editores
+.vscode/
+.idea/
+
+# Material privado del plan: nunca al repositorio
+privado/
+CONTEXTO_PRIVADO.md
+*.xlsx
+*.pdf
+
+# Copia temporal del banco de pruebas
+_pruebas.html
