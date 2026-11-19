@@ -11,5 +11,5 @@
 //   2. El ?v=... de los <script> y del <link> del index.html, que es lo que
 //      obliga al navegador a bajar los ficheros de nuevo.
 
-const VERSION = "1.0";
-const VERSION_FECHA = "2026-11-18";
+const VERSION = "1.1";
+const VERSION_FECHA = "2026-11-19";

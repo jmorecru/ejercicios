@@ -11,7 +11,7 @@
     try { fn(); } catch (e) { log("EXCEPCION en " + nombre + ": " + e.message); }
   }
   try { localStorage.removeItem(CLAVE); } catch (e) {}
-  guardado = { ajustes: {}, sonido: false, voz: false, ritmo: 3, ultimoDia: null };
+  guardado = { ajustes: {}, sonido: false, voz: false, vozId: "", velocidad: 0.85, ritmo: 3, ultimoDia: null };
   avisos.prefs.sonido = false;
   avisos.prefs.voz = false;
 
@@ -149,6 +149,44 @@
     log("el ultimo del dia felicita y no ofrece siguiente: " + ok(/Has terminado/.test($("fin-texto").textContent) && $("fin-siguiente").hidden));
     pararCrono();
     log("al parar se cierra el temporizador: " + ok($("crono").hidden && !crono.activo));
+  });
+
+  prueba("voz", function () {
+    log("[voz]");
+    log("el punto medio se lee como pausa: " +
+        ok(avisos.paraLeer("Serie 1 de 3 · lado izquierdo · Vamos") === "Serie 1 de 3. lado izquierdo. Vamos"));
+    log("lo que va entre parentesis no se lee: " +
+        ok(avisos.paraLeer("Prepárate. Retracción cervical suave (chin tuck)") === "Prepárate. Retracción cervical suave"));
+    const leido = PLAN.ejercicios.every(function (e) {
+      return pasosDe(e, ajustesDe(e)).every(function (p) { return !/[·()]/.test(avisos.paraLeer(p.voz || "")); });
+    });
+    log("ningun aviso de los 31 ejercicios lee simbolos: " + ok(leido));
+
+    // Voces falsas como las de un iPhone: las de efecto salen primero.
+    const falsas = [
+      { name: "Eddy (Español (España))", lang: "es-ES", voiceURI: "eddy" },
+      { name: "Abuela (Español (España))", lang: "es-ES", voiceURI: "abuela" },
+      { name: "Paulina", lang: "es-MX", voiceURI: "paulina" },
+      { name: "Mónica", lang: "es-ES", voiceURI: "monica" },
+      { name: "Jorge (mejorada)", lang: "es-ES", voiceURI: "jorge-m" },
+      { name: "Samantha", lang: "en-US", voiceURI: "samantha" }
+    ];
+    const original = speechSynthesis.getVoices;
+    speechSynthesis.getVoices = function () { return falsas; };
+    const ids = avisos.vocesEs().map(function (v) { return v.voiceURI; });
+    log("descarta las voces de efecto y las que no son en espanol: " + ok(ids.join() === "jorge-m,monica,paulina"));
+    avisos.prefs.vozId = "";
+    log("sin eleccion coge la mejorada: " + ok(avisos.vozElegida().voiceURI === "jorge-m"));
+    avisos.prefs.vozId = "paulina";
+    log("respeta la voz elegida a mano: " + ok(avisos.vozElegida().voiceURI === "paulina"));
+    avisos.prefs.vozId = "ya-no-existe";
+    log("si la elegida desaparece, vuelve a la mejor: " + ok(avisos.vozElegida().voiceURI === "jorge-m"));
+    pintarInicio();
+    log("los ajustes listan 3 voces y la automatica: " + ok($("pref-voz-id").options.length === 4));
+    log("la automatica dice cual es: " + ok(/Jorge/.test($("pref-voz-id").options[0].text)));
+    log("velocidad normal por defecto: " + ok($("pref-velocidad").value === "0.85"));
+    speechSynthesis.getVoices = original;
+    avisos.prefs.vozId = "";
   });
 
   const div = document.createElement("div");

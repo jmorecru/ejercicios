@@ -59,6 +59,12 @@ del plan y desde la ficha se puede subir: así se progresa.
 - El interruptor de silencio callaría los pitidos: para evitarlo suena en bucle un
   audio mudo mientras corre el temporizador.
 - La web no puede vibrar en iPhone; por eso el aviso es también de color y de voz.
+- iOS ofrece en español voces "de efecto" (Eddy, Flo, Abuela…) que suenan a robot y a
+  menudo salen las primeras. La app las descarta y elige la más natural, prefiriendo
+  las *mejoradas* si están descargadas. En los ajustes se puede elegir otra voz y la
+  velocidad (por defecto 0,85: en iPhone, la velocidad 1 ya suena deprisa).
+- Lo que se lee no es exactamente lo que se ve: el " · " de la pantalla se convierte
+  en pausa y lo que va entre paréntesis no se lee.
 
 ## Cómo ponerlo en marcha
 

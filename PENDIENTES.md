@@ -1,6 +1,6 @@
 # Pendientes
 
-Última revisión: **18 de noviembre de 2026**. Versión: **1.0**, publicada en
+Última revisión: **19 de noviembre de 2026**. Versión: **1.1**, publicada en
 <https://jmorecru.github.io/ejercicios/>.
 
 > **Al desplegar, subir la versión.** `VERSION` y `VERSION_FECHA` en
@@ -14,7 +14,10 @@
 1. ~~Crear el repositorio y activar GitHub Pages~~ (hecho el 18-11-2026).
 2. **Probar en el iPhone**, añadida a la pantalla de inicio:
    - que suenen los pitidos **con el interruptor de silencio puesto**;
-   - que hable la voz (y si la voz en español suena bien);
+   - que hable la voz. En la 1.0 sonaba **robótica y deprisa**; la 1.1 descarta las
+     voces de efecto de iOS, baja la velocidad a 0,85, lee pausas en lugar de " · " y
+     deja elegir voz y velocidad. Falta confirmar que ya suena bien y si Safari ofrece
+     las voces *mejoradas* descargadas;
    - que la pantalla no se apague durante un ejercicio;
    - que, si se bloquea el móvil a mitad, al volver el temporizador esté donde debe.
 3. **Ajustar el ritmo por repetición** si 3 s se queda corto o largo en la práctica.

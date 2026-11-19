@@ -21,7 +21,7 @@ function esc(s) {
 // ---------- Preferencias guardadas ----------
 
 const CLAVE = "ejercicios.v1";
-let guardado = { ajustes: {}, sonido: true, voz: true, ritmo: 3, ultimoDia: null };
+let guardado = { ajustes: {}, sonido: true, voz: true, vozId: "", velocidad: 0.85, ritmo: 3, ultimoDia: null };
 
 function cargar() {
   try {
@@ -30,6 +30,8 @@ function cargar() {
   } catch (e) {}
   avisos.prefs.sonido = guardado.sonido;
   avisos.prefs.voz = guardado.voz;
+  avisos.prefs.vozId = guardado.vozId;
+  avisos.prefs.velocidad = guardado.velocidad;
 }
 
 function guardar() {
@@ -111,8 +113,23 @@ function pintarInicio() {
   $("consejos").innerHTML = [PLAN.calentamiento].concat(PLAN.consejos).map(function (c) { return "<li>" + esc(c) + "</li>"; }).join("");
   $("pref-sonido").checked = guardado.sonido;
   $("pref-voz").checked = guardado.voz;
+  $("pref-velocidad").value = String(guardado.velocidad);
+  pintarVoces();
   $("pref-ritmo").textContent = guardado.ritmo;
   mostrar("inicio");
+}
+
+// Las voces llegan tarde (evento voiceschanged), asi que la lista se rehace
+// cada vez que cambian. Si la voz guardada ya no esta, se ve "la mas natural".
+function pintarVoces() {
+  const sel = $("pref-voz-id");
+  const voces = avisos.vocesEs();
+  const mejor = voces[0] ? " (" + voces[0].name + ")" : "";
+  sel.innerHTML = '<option value="">La más natural' + esc(mejor) + "</option>" +
+    voces.map(function (v) {
+      return '<option value="' + esc(v.voiceURI) + '">' + esc(v.name) + (v.lang === "es-ES" ? "" : " · " + esc(v.lang)) + "</option>";
+    }).join("");
+  sel.value = voces.some(function (v) { return v.voiceURI === guardado.vozId; }) ? guardado.vozId : "";
 }
 
 function pintarDia(diaId) {
@@ -411,6 +428,18 @@ function iniciarApp() {
   $("pref-voz").addEventListener("change", function () {
     guardado.voz = avisos.prefs.voz = this.checked; guardar();
   });
+  $("pref-voz-id").addEventListener("change", function () {
+    guardado.vozId = avisos.prefs.vozId = this.value; guardar();
+    avisos.probar();
+  });
+  $("pref-velocidad").addEventListener("change", function () {
+    guardado.velocidad = avisos.prefs.velocidad = parseFloat(this.value); guardar();
+    avisos.probar();
+  });
+  $("pref-probar").addEventListener("click", function () { avisos.probar(); });
+  if (window.speechSynthesis && speechSynthesis.addEventListener) {
+    speechSynthesis.addEventListener("voiceschanged", pintarVoces);
+  }
   document.querySelectorAll("[data-ritmo]").forEach(function (b) {
     b.addEventListener("click", function () {
       guardado.ritmo = Math.min(8, Math.max(2, guardado.ritmo + parseInt(b.dataset.ritmo, 10)));

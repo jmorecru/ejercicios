@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Ejercicios">
 
-<link rel="stylesheet" href="styles.css?v=1.0">
+<link rel="stylesheet" href="styles.css?v=1.1">
 </head>
 <body>
 
@@ -38,6 +38,23 @@
       <summary>Ajustes del temporizador</summary>
       <label class="fila-ajuste"><span>Pitidos</span><input type="checkbox" id="pref-sonido"></label>
       <label class="fila-ajuste"><span>Voz que avisa</span><input type="checkbox" id="pref-voz"></label>
+      <label class="fila-ajuste"><span>Voz</span>
+        <select id="pref-voz-id"><option value="">La más natural que haya</option></select>
+      </label>
+      <label class="fila-ajuste"><span>Velocidad de la voz</span>
+        <select id="pref-velocidad">
+          <option value="0.75">Lenta</option>
+          <option value="0.85">Normal</option>
+          <option value="0.95">Algo rápida</option>
+        </select>
+      </label>
+      <div class="fila-ajuste">
+        <span>Escucha cómo suena</span>
+        <button type="button" class="btn-probar" id="pref-probar">🔊 Probar</button>
+      </div>
+      <p class="nota">¿Suena a robot? En el iPhone puedes descargar una voz mejor: Ajustes →
+        Accesibilidad → Contenido leído → Voces → Español (España) → Mónica o Jorge →
+        «Mejorada». Después, si aparece en la lista de arriba, elígela.</p>
       <div class="fila-ajuste">
         <span>Segundos por repetición<br><small>Con tempo lento, súbelo</small></span>
         <span class="paso">
@@ -119,10 +136,10 @@
 
 <div id="visor" class="visor" hidden><img id="visor-img" alt=""></div>
 
-<script src="data/ejercicios.js?v=1.0"></script>
-<script src="js/version.js?v=1.0"></script>
-<script src="js/pautas.js?v=1.0"></script>
-<script src="js/sonido.js?v=1.0"></script>
-<script src="js/app.js?v=1.0"></script>
+<script src="data/ejercicios.js?v=1.1"></script>
+<script src="js/version.js?v=1.1"></script>
+<script src="js/pautas.js?v=1.1"></script>
+<script src="js/sonido.js?v=1.1"></script>
+<script src="js/app.js?v=1.1"></script>
 </body>
 </html>

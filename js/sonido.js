@@ -17,7 +17,9 @@ const avisos = (function () {
   let mudo = null;
   let candado = null;
   let quiereCandado = false;
-  const prefs = { sonido: true, voz: true };
+  // vozId: voiceURI elegida a mano ("" = la mejor que haya).
+  // velocidad: rate de la voz; en iPhone 1 ya suena deprisa.
+  const prefs = { sonido: true, voz: true, vozId: "", velocidad: 0.85 };
 
   function wavMudo() {
     const n = 4000; // medio segundo a 8 kHz, 8 bits
@@ -70,6 +72,7 @@ const avisos = (function () {
 
   function desactivar() {
     try { if (mudo) mudo.pause(); } catch (e) {}
+    clearTimeout(pendiente);
     try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
     pantallaEncendida(false);
   }
@@ -93,22 +96,69 @@ const avisos = (function () {
     try { if (navigator.vibrate) navigator.vibrate(patron); } catch (e) {}
   }
 
-  let vozEs = null;
-  function decir(texto) {
-    if (!prefs.voz || !texto || !window.speechSynthesis) return;
+  // ---------- Voz ----------
+  //
+  // iOS ofrece en espanol, ademas de Monica o Jorge, voces de efecto (Eddy, Flo,
+  // Abuela, Rocko...) que suenan roboticas y a menudo salen las primeras de la
+  // lista. Por eso no se coge la primera: se descartan las de efecto y se
+  // puntua el resto, prefiriendo las "mejoradas" si el usuario las ha
+  // descargado. Tambien se puede elegir una a mano en los ajustes.
+  const DE_EFECTO = /\b(eddy|flo|grandma|grandpa|abuel[ao]|reed|rocko|sandy|shelley|albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|kathy|ralph)\b/i;
+  const MEJORADA = /premium|enhanced|mejorad|neural|natural|online/i;
+  const CONOCIDAS = /m[oó]nica|jorge|marisol|paulina|juan|diego|helena|laura|pablo|elvira|[aá]lvaro|google/i;
+
+  function puntos(v) {
+    return (v.lang === "es-ES" || v.lang === "es_ES" ? 4 : 0) +
+           (MEJORADA.test(v.name) ? 8 : 0) +
+           (CONOCIDAS.test(v.name) ? 2 : 0);
+  }
+
+  // Las voces en espanol utiles, de mejor a peor.
+  function vocesEs() {
+    if (!window.speechSynthesis) return [];
+    return speechSynthesis.getVoices()
+      .filter(function (v) { return /^es/i.test(v.lang) && !DE_EFECTO.test(v.name); })
+      .sort(function (a, b) { return puntos(b) - puntos(a); });
+  }
+
+  function vozElegida() {
+    const voces = vocesEs();
+    return voces.filter(function (v) { return v.voiceURI === prefs.vozId; })[0] || voces[0] || null;
+  }
+
+  // Lo que se lee no es lo que se ve: el " · " de la pantalla se convierte en
+  // pausa de frase, y lo que va entre parentesis (el nombre en ingles) no se lee.
+  function paraLeer(texto) {
+    return texto.replace(/\s*\([^)]*\)/g, "").replace(/\s*·\s*/g, ". ").trim();
+  }
+
+  let pendiente = null;
+  function hablar(texto) {
     try {
-      if (!vozEs) {
-        const voces = speechSynthesis.getVoices();
-        vozEs = voces.filter(function (v) { return v.lang === "es-ES"; })[0] ||
-                voces.filter(function (v) { return /^es/.test(v.lang); })[0] || null;
-      }
       speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(texto);
+      const u = new SpeechSynthesisUtterance(paraLeer(texto));
       u.lang = "es-ES";
-      if (vozEs) u.voice = vozEs;
-      u.rate = 1.05;
+      const v = vozElegida();
+      if (v) { u.voice = v; u.lang = v.lang; }
+      u.rate = prefs.velocidad;
+      u.pitch = 1;
       speechSynthesis.speak(u);
     } catch (e) {}
+  }
+
+  // Con pitido, la voz entra justo despues para no pisarse con el.
+  function decir(texto) {
+    if (!prefs.voz || !texto || !window.speechSynthesis) return;
+    clearTimeout(pendiente);
+    if (prefs.sonido) pendiente = setTimeout(function () { hablar(texto); }, 450);
+    else hablar(texto);
+  }
+
+  // Desde un toque (boton "Probar"): sin espera, para que iOS la deje sonar.
+  function probar() {
+    if (!window.speechSynthesis) return;
+    clearTimeout(pendiente);
+    hablar("Serie 2 de 3 · lado izquierdo · Vamos");
   }
 
   async function pantallaEncendida(si) {
@@ -145,6 +195,10 @@ const avisos = (function () {
     activar: activar,
     desactivar: desactivar,
     decir: decir,
+    probar: probar,
+    vocesEs: vocesEs,
+    vozElegida: vozElegida,
+    paraLeer: paraLeer,
     fase: function (f) { (porFase[f] || function () {})(); },
     cuenta: function () { tono(1320, 0.07, 0, 0.3); },
     fin: function () { tono(523, 0.18); tono(659, 0.18, 0.18); tono(784, 0.18, 0.36); tono(1047, 0.45, 0.54); vibrar([300, 100, 300, 100, 600]); }
