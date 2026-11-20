@@ -1,6 +1,6 @@
 # Pendientes
 
-Última revisión: **19 de noviembre de 2026**. Versión: **1.1**, publicada en
+Última revisión: **20 de noviembre de 2026**. Versión: **1.2**, publicada en
 <https://jmorecru.github.io/ejercicios/>.
 
 > **Al desplegar, subir la versión.** `VERSION` y `VERSION_FECHA` en
@@ -16,14 +16,21 @@
    - que suenen los pitidos **con el interruptor de silencio puesto**;
    - que hable la voz. En la 1.0 sonaba **robótica y deprisa**; la 1.1 descarta las
      voces de efecto de iOS, baja la velocidad a 0,85, lee pausas en lugar de " · " y
-     deja elegir voz y velocidad. Falta confirmar que ya suena bien y si Safari ofrece
-     las voces *mejoradas* descargadas;
+     deja elegir voz y velocidad. **Safari no ofrece las voces descargadas** (se probó
+     con Marisol mejorada): la voz del iPhone seguirá siendo la básica;
+   - que el **contador de repeticiones** (1.2) vaya bien de ritmo y no se pise con los
+     avisos;
    - que la pantalla no se apague durante un ejercicio;
    - que, si se bloquea el móvil a mitad, al volver el temporizador esté donde debe.
 3. **Ajustar el ritmo por repetición** si 3 s se queda corto o largo en la práctica.
 
 ## Ideas para más adelante
 
+- **Avisos grabados con voz natural**: como Safari no deja usar las voces buenas del
+  iPhone, generar en el ordenador las frases (fases, números, nombres de ejercicio)
+  con una voz natural en español de España y llevarlas como audio dentro de la app.
+  Pendiente de que el usuario la escuche (Edge en el PC, voz «Microsoft … Online
+  (Natural)») y decida.
 - **Modo sesión**: encadenar todos los ejercicios del día sin volver a la lista. Tiene
   más sentido en la movilidad, que son 7 ejercicios cortos seguidos.
 - **Funcionar sin conexión** con un *service worker*. No se ha puesto a propósito: con la

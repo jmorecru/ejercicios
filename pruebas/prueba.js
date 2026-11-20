@@ -189,6 +189,49 @@
     avisos.prefs.vozId = "";
   });
 
+  prueba("contador", function () {
+    log("[contador]");
+    const p01 = de(pasosDe(ejPorId("01"), {}), "trabajo")[0];
+    log("las series por repeticiones cuentan hasta las del plan (01: 12, cada 3 s): " + ok(p01.cuenta === 12 && p01.cada === 3));
+    const p02 = de(pasosDe(ejPorId("02"), {}), "trabajo")[0];
+    log("en alternos cuenta parejas (02: 8, cada 10 s): " + ok(p02.cuenta === 8 && p02.cada === 10 && p02.seg === 80));
+    log("por tiempo no cuenta (05): " + ok(!de(pasosDe(ejPorId("05"), {}), "trabajo")[0].cuenta));
+    log("los intervalos no cuentan (f1): " + ok(!de(pasosDe(ejPorId("f1"), {}), "trabajo").some(function (x) { return x.cuenta; })));
+    log("el circuito cuenta cada parte (21: 12): " + ok(de(pasosDe(ejPorId("21"), {}), "trabajo").every(function (x) { return x.cuenta === 12; })));
+    log("la ultima se dice antes de acabar la serie: " + ok(PLAN.ejercicios.every(function (e) {
+      return pasosDe(e, ajustesDe(e)).every(function (x) { return !x.cuenta || x.cuenta * x.cada - CUENTA_ADELANTO < x.seg; });
+    })));
+
+    // Se cambia contar() por uno que apunta, para ver que numeros dice y cuando.
+    const dichos = [];
+    const contarOriginal = avisos.contar;
+    avisos.contar = function (n) { dichos.push(n); };
+    avisos.prefs.voz = true; avisos.prefs.contar = true;
+    const decirOriginal = avisos.decir;
+    avisos.decir = function () {};
+    empezarCrono(ejPorId("01"));
+    pasa(10);              // fin del "prepárate"
+    for (let s = 0; s < 36; s += 0.2) { reloj += 200; tick(); }
+    log("en una serie de 12 dice del 1 al 12 en orden: " + ok(dichos.join() === "1,2,3,4,5,6,7,8,9,10,11,12"));
+    log("y pasa al descanso: " + ok(crono.pasos[crono.i].fase === "descanso"));
+    pararCrono();
+
+    dichos.length = 0;
+    empezarCrono(ejPorId("01"));
+    pasa(10); pasa(4);
+    masTiempo();
+    for (let s = 0; s < 3; s += 0.2) { reloj += 200; tick(); }
+    log("+10 s no repite numeros: " + ok(dichos.join() === "1,2"));
+    pasa(20);
+    for (let s = 0; s < 3; s += 0.2) { reloj += 200; tick(); }
+    log("tras bloquear el movil sigue por donde va, sin soltar los saltados: " + ok(dichos.length === 3 && dichos[2] > 3));
+    pararCrono();
+
+    avisos.contar = contarOriginal;
+    avisos.decir = decirOriginal;
+    avisos.prefs.voz = false; avisos.prefs.contar = true;
+  });
+
   const div = document.createElement("div");
   div.id = "resultado-prueba";
   div.textContent = out.join("\n");

@@ -17,6 +17,8 @@ Se puede añadir a la pantalla de inicio del móvil y funciona como una app.
   - el color cambia con la fase: naranja para prepararse, verde para trabajar, azul
     para descansar y morado para cambiar de lado;
   - avisa con pitidos (y cuenta atrás de 3-2-1), con voz y, en Android, con vibración;
+  - en las series por repeticiones, la voz va contando «uno, dos, tres…» al ritmo del
+    ejercicio (en los alternos, cada pareja); se puede apagar en los ajustes;
   - la imagen del ejercicio sigue a la vista;
   - **Pausa**, **+10 s** y **Hecho** para adelantar cuando acabas la serie antes;
   - mantiene la pantalla encendida mientras corre;
@@ -59,6 +61,8 @@ del plan y desde la ficha se puede subir: así se progresa.
 - El interruptor de silencio callaría los pitidos: para evitarlo suena en bucle un
   audio mudo mientras corre el temporizador.
 - La web no puede vibrar en iPhone; por eso el aviso es también de color y de voz.
+- Safari en iPhone **no deja usar las voces descargadas** en Ajustes (las
+  «mejoradas»): a las webs solo les da las básicas. Es una limitación de WebKit.
 - iOS ofrece en español voces "de efecto" (Eddy, Flo, Abuela…) que suenan a robot y a
   menudo salen las primeras. La app las descarta y elige la más natural, prefiriendo
   las *mejoradas* si están descargadas. En los ajustes se puede elegir otra voz y la

@@ -19,7 +19,8 @@ const avisos = (function () {
   let quiereCandado = false;
   // vozId: voiceURI elegida a mano ("" = la mejor que haya).
   // velocidad: rate de la voz; en iPhone 1 ya suena deprisa.
-  const prefs = { sonido: true, voz: true, vozId: "", velocidad: 0.85 };
+  // contar: decir en voz alta el numero de cada repeticion.
+  const prefs = { sonido: true, voz: true, vozId: "", velocidad: 0.85, contar: true };
 
   function wavMudo() {
     const n = 4000; // medio segundo a 8 kHz, 8 bits
@@ -133,9 +134,9 @@ const avisos = (function () {
   }
 
   let pendiente = null;
-  function hablar(texto) {
+  function hablar(texto, sinCortar) {
     try {
-      speechSynthesis.cancel();
+      if (!sinCortar) speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(paraLeer(texto));
       u.lang = "es-ES";
       const v = vozElegida();
@@ -152,6 +153,15 @@ const avisos = (function () {
     clearTimeout(pendiente);
     if (prefs.sonido) pendiente = setTimeout(function () { hablar(texto); }, 450);
     else hablar(texto);
+  }
+
+  // El numero de la repeticion. No corta lo que se este diciendo (el "Serie 2
+  // de 3, vamos" del principio): se pone detras. Pero si ya hay algo esperando,
+  // se lo salta, para que la cuenta no se quede atrasada respecto al ritmo.
+  function contar(n) {
+    if (!prefs.voz || !prefs.contar || !window.speechSynthesis) return;
+    try { if (speechSynthesis.pending) return; } catch (e) {}
+    hablar(String(n), true);
   }
 
   // Desde un toque (boton "Probar"): sin espera, para que iOS la deje sonar.
@@ -196,6 +206,7 @@ const avisos = (function () {
     desactivar: desactivar,
     decir: decir,
     probar: probar,
+    contar: contar,
     vocesEs: vocesEs,
     vozElegida: vozElegida,
     paraLeer: paraLeer,

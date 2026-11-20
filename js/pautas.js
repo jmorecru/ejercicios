@@ -1,8 +1,11 @@
 // Convierte la 'pauta' de un ejercicio en la lista de pasos del temporizador.
 //
-// Un paso es { fase, seg, titulo, detalle, voz, micro }:
+// Un paso es { fase, seg, titulo, detalle, voz, micro, cuenta, cada, rep }:
 //   fase: "prepara" | "trabajo" | "aguanta" | "suelta" | "descanso" | "cambio"
 //   micro: pasos cortos de aguantar/soltar, que solo pitan y no cuentan atras.
+//   cuenta / cada: trabajo por repeticiones; la voz cuenta de 1 a 'cuenta',
+//                  un numero cada 'cada' segundos (en alternos, cada pareja).
+//   rep: numero de repeticion en los pasos de aguantar.
 //
 // Aqui no hay nada de pantalla ni de sonido: son funciones puras para que el
 // banco de pruebas pueda recorrer todos los ejercicios sin esperar.
@@ -45,7 +48,7 @@ function pasosTrabajo(p, v, cabecera, lado) {
   const voz = unir(cabecera, lado);
   if (v.mantener) {
     for (let r = 1; r <= v.reps; r++) {
-      out.push({ fase: "aguanta", seg: v.mantener, micro: true,
+      out.push({ fase: "aguanta", seg: v.mantener, micro: true, rep: r,
                  titulo: "Aguanta", detalle: unir(cabecera, lado, "repetición " + r + " de " + v.reps),
                  voz: r === 1 ? unir(voz, "Aguanta") : "Aguanta" });
       if (r < v.reps) out.push({ fase: "suelta", seg: p.soltar_seg || 2, micro: true,
@@ -61,7 +64,8 @@ function pasosTrabajo(p, v, cabecera, lado) {
   }
   const reps = p.lados === "alternos" ? v.reps * 2 : v.reps;
   const txtReps = p.lados === "alternos" ? v.reps + " por lado, alternando" : v.reps + " repeticiones";
-  out.push({ fase: "trabajo", seg: Math.round(reps * v.segRep), reps: true, titulo: "¡Vamos!",
+  const cada = p.lados === "alternos" ? v.segRep * 2 : v.segRep;
+  out.push({ fase: "trabajo", seg: Math.round(reps * v.segRep), reps: true, cuenta: v.reps, cada: cada, titulo: "¡Vamos!",
              detalle: unir(cabecera, lado, txtReps), voz: unir(voz, "Vamos") });
   return out;
 }
@@ -119,7 +123,7 @@ function pasosCircuito(p, v) {
     p.bloques.forEach(function (bl, i) {
       if (i > 0) pasos.push({ fase: "cambio", seg: p.cambio_seg, titulo: "Cambia",
                               detalle: "Ahora " + bl.nombre, voz: "Cambia. " + bl.nombre });
-      pasos.push({ fase: "trabajo", seg: Math.round(bl.reps * v.segRep), reps: true, titulo: "¡Vamos!",
+      pasos.push({ fase: "trabajo", seg: Math.round(bl.reps * v.segRep), reps: true, cuenta: bl.reps, cada: v.segRep, titulo: "¡Vamos!",
                    detalle: unir("Ronda " + r + " de " + p.rondas, bl.nombre, bl.reps + " repeticiones"),
                    voz: i === 0 ? unir("Ronda " + r, bl.nombre) : "" });
     });

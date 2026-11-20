@@ -21,7 +21,7 @@ function esc(s) {
 // ---------- Preferencias guardadas ----------
 
 const CLAVE = "ejercicios.v1";
-let guardado = { ajustes: {}, sonido: true, voz: true, vozId: "", velocidad: 0.85, ritmo: 3, ultimoDia: null };
+let guardado = { ajustes: {}, sonido: true, voz: true, vozId: "", velocidad: 0.85, contar: true, ritmo: 3, ultimoDia: null };
 
 function cargar() {
   try {
@@ -32,6 +32,7 @@ function cargar() {
   avisos.prefs.voz = guardado.voz;
   avisos.prefs.vozId = guardado.vozId;
   avisos.prefs.velocidad = guardado.velocidad;
+  avisos.prefs.contar = guardado.contar;
 }
 
 function guardar() {
@@ -114,6 +115,7 @@ function pintarInicio() {
   $("pref-sonido").checked = guardado.sonido;
   $("pref-voz").checked = guardado.voz;
   $("pref-velocidad").value = String(guardado.velocidad);
+  $("pref-contar").checked = guardado.contar;
   pintarVoces();
   $("pref-ritmo").textContent = guardado.ritmo;
   mostrar("inicio");
@@ -237,7 +239,7 @@ function ruta() {
 
 const crono = {
   activo: false, ej: null, pasos: [], i: 0, finPaso: 0, inicio: 0,
-  pausado: false, restante: 0, total: 0, avisado: -1, intervalo: null,
+  pausado: false, restante: 0, total: 0, avisado: -1, contado: 0, extra: 0, intervalo: null,
   terminado: false, transicionFin: 0, transicionAvisada: false
 };
 
@@ -275,6 +277,8 @@ function pararCrono() {
 function entrarPaso(conAviso) {
   const p = crono.pasos[crono.i];
   crono.avisado = -1;
+  crono.contado = 0;
+  crono.extra = 0;
   $("crono").className = "crono fase-" + p.fase;
   $("crono-fase").textContent = p.titulo;
   $("crono-detalle").textContent = p.detalle;
@@ -282,8 +286,26 @@ function entrarPaso(conAviso) {
   $("crono-hecho").textContent = p.fase === "trabajo" || p.fase === "aguanta" ? "Hecho ⏭" : "Saltar ⏭";
   if (conAviso) {
     avisos.fase(p.fase);
-    avisos.decir(p.voz);
+    const numero = p.fase === "aguanta" && p.rep > 1 && avisos.prefs.contar;
+    avisos.decir(numero ? p.rep + " · " + p.voz : p.voz);
   }
+}
+
+// Momento (segundos desde que empezo el paso) en que se dice la repeticion k:
+// un poco antes de completarla, para que la ultima se oiga antes del pitido
+// de descanso.
+const CUENTA_ADELANTO = 0.8;
+
+// La cuenta en voz alta de las repeticiones. Si el movil estuvo bloqueado y se
+// ha saltado varias, se pone al dia en silencio. Con +10 s la cuenta sigue a su
+// ritmo y el tiempo de mas queda al final.
+function tickCuenta(p, transcurrido) {
+  if (!p.cuenta) return;
+  const k = Math.min(p.cuenta, Math.floor((transcurrido + CUENTA_ADELANTO) / p.cada));
+  if (k <= crono.contado) return;
+  const seguido = k === crono.contado + 1;
+  crono.contado = k;
+  if (seguido) avisos.contar(k);
 }
 
 // Avanza todos los pasos que ya han vencido. Si el movil estuvo bloqueado y han
@@ -304,7 +326,9 @@ function tick() {
   const p = crono.pasos[crono.i];
   const queda = (crono.finPaso - t) / 1000;
   const entero = Math.ceil(queda);
-  if (!p.micro && p.seg >= 5 && entero <= 3 && entero >= 1 && entero !== crono.avisado) {
+  tickCuenta(p, p.seg + crono.extra - queda);
+  const contando = p.cuenta && avisos.prefs.voz && avisos.prefs.contar;
+  if (!p.micro && !contando && p.seg >= 5 && entero <= 3 && entero >= 1 && entero !== crono.avisado) {
     crono.avisado = entero;
     avisos.cuenta();
   }
@@ -384,6 +408,7 @@ function saltar() {
 function masTiempo() {
   if (crono.pausado) crono.restante += 10000;
   else crono.finPaso += 10000;
+  crono.extra += 10;
   tick();
 }
 
@@ -435,6 +460,9 @@ function iniciarApp() {
   $("pref-velocidad").addEventListener("change", function () {
     guardado.velocidad = avisos.prefs.velocidad = parseFloat(this.value); guardar();
     avisos.probar();
+  });
+  $("pref-contar").addEventListener("change", function () {
+    guardado.contar = avisos.prefs.contar = this.checked; guardar();
   });
   $("pref-probar").addEventListener("click", function () { avisos.probar(); });
   if (window.speechSynthesis && speechSynthesis.addEventListener) {
