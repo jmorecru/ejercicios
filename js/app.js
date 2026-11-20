@@ -21,7 +21,7 @@ function esc(s) {
 // ---------- Preferencias guardadas ----------
 
 const CLAVE = "ejercicios.v1";
-let guardado = { ajustes: {}, sonido: true, voz: true, vozId: "", velocidad: 0.85, contar: true, ritmo: 3, ultimoDia: null };
+let guardado = { ajustes: {}, sonido: true, voz: true, vozId: "", velocidad: 0.95, contar: true, ritmo: 3, ultimoDia: null };
 
 function cargar() {
   try {
@@ -121,17 +121,22 @@ function pintarInicio() {
   mostrar("inicio");
 }
 
-// Las voces llegan tarde (evento voiceschanged), asi que la lista se rehace
-// cada vez que cambian. Si la voz guardada ya no esta, se ve "la mas natural".
+// Primero la voz grabada (Alvaro), que es la buena. Despues las del movil:
+// llegan tarde (evento voiceschanged), asi que la lista se rehace cada vez que
+// cambian. Si la voz guardada ya no esta, se ve "la mas natural del movil".
 function pintarVoces() {
   const sel = $("pref-voz-id");
   const voces = avisos.vocesEs();
   const mejor = voces[0] ? " (" + voces[0].name + ")" : "";
-  sel.innerHTML = '<option value="">La más natural' + esc(mejor) + "</option>" +
+  sel.innerHTML = '<option value="">Álvaro, grabada (la mejor)</option>' +
+    '<option value="auto">La más natural del móvil' + esc(mejor) + "</option>" +
     voces.map(function (v) {
       return '<option value="' + esc(v.voiceURI) + '">' + esc(v.name) + (v.lang === "es-ES" ? "" : " · " + esc(v.lang)) + "</option>";
     }).join("");
-  sel.value = voces.some(function (v) { return v.voiceURI === guardado.vozId; }) ? guardado.vozId : "";
+  const id = guardado.vozId;
+  sel.value = id === "" || voces.some(function (v) { return v.voiceURI === id; }) ? id : "auto";
+  // La velocidad solo sirve para las voces del movil: la grabada va a la suya.
+  $("fila-velocidad").hidden = sel.value === "";
 }
 
 function pintarDia(diaId) {
@@ -161,6 +166,7 @@ function pintarFicha(id) {
   const ej = ejPorId(id);
   if (!ej) { location.hash = ""; return; }
   fichaActual = ej;
+  avisos.precargar(frasesDe(ej, ajustesDe(ej)));
   const d = diaPorId(ej.grupo);
   $("ficha-volver").href = "#/dia/" + ej.grupo;
   $("ficha-num").textContent = d.titulo.split("—")[0].trim() + " · " + numeroDe(ej);
@@ -245,6 +251,7 @@ const crono = {
 
 function empezarCrono(ej) {
   avisos.activar();
+  avisos.precargar(frasesDe(ej, ajustesDe(ej)));
   crono.activo = true;
   crono.terminado = false;
   crono.ej = ej;
@@ -286,9 +293,49 @@ function entrarPaso(conAviso) {
   $("crono-hecho").textContent = p.fase === "trabajo" || p.fase === "aguanta" ? "Hecho ⏭" : "Saltar ⏭";
   if (conAviso) {
     avisos.fase(p.fase);
-    const numero = p.fase === "aguanta" && p.rep > 1 && avisos.prefs.contar;
-    avisos.decir(numero ? p.rep + " · " + p.voz : p.voz);
+    avisos.decir(vozDePaso(p, avisos.prefs.contar));
   }
+}
+
+// ---------- Lo que dice la voz ----------
+
+const DICE_FIN_DIA = "Has terminado. ¡Bien hecho!";
+const DICE_A_SIGUIENTE = "Cuando quieras, al siguiente";
+function diceSiguiente(ej) { return "Ejercicio terminado. Siguiente: " + ej.nombre; }
+
+// En los pasos de aguantar, con el contador puesto, delante va el numero.
+function vozDePaso(p, contar) {
+  return p.fase === "aguanta" && p.rep > 1 && contar ? p.rep + " · " + p.voz : p.voz;
+}
+
+// Todo lo que puede decir la voz durante un ejercicio, para tenerlo grabado
+// y cargado antes de que haga falta.
+function frasesDe(ej, ajustes) {
+  const pasos = pasosDe(ej, ajustes);
+  const out = [];
+  pasos.forEach(function (p) {
+    out.push(vozDePaso(p, true), vozDePaso(p, false));
+    for (let n = 1; n <= (p.cuenta || 0); n++) out.push(String(n));
+  });
+  const ejs = ejerciciosDe(ej.grupo);
+  const sig = ejs[ejs.indexOf(ej) + 1];
+  out.push(sig ? diceSiguiente(sig) : DICE_FIN_DIA, DICE_A_SIGUIENTE);
+  return out.filter(Boolean);
+}
+
+// Lo que hay que grabar: lo de todos los ejercicios y, como las repeticiones se
+// pueden subir en la ficha, los numeros hasta CUENTA_MAXIMA.
+const CUENTA_MAXIMA = 40;
+function frasesGrabables() {
+  const todas = [avisos.FRASE_PRUEBA];
+  PLAN.ejercicios.forEach(function (ej) { Array.prototype.push.apply(todas, frasesDe(ej, {})); });
+  for (let n = 1; n <= CUENTA_MAXIMA; n++) todas.push(String(n), n + " · Aguanta");
+  const vistas = {};
+  return todas.map(avisos.paraLeer).filter(function (t) {
+    if (vistas[t]) return false;
+    vistas[t] = true;
+    return true;
+  });
 }
 
 // Momento (segundos desde que empezo el paso) en que se dice la repeticion k:
@@ -350,7 +397,7 @@ function terminar() {
   $("crono-marcha").hidden = true;
   $("crono-fin").hidden = false;
   if (sig) {
-    avisos.decir("Ejercicio terminado. Siguiente: " + sig.nombre);
+    avisos.decir(diceSiguiente(sig));
     $("fin-texto").textContent = "Siguiente: " + sig.nombre;
     $("fin-siguiente").hidden = false;
     $("fin-siguiente").textContent = "Ir al siguiente ›";
@@ -359,7 +406,7 @@ function terminar() {
     $("fin-cuenta-txt").textContent = "Descansa, cambia el material y bebe agua.";
     tickTransicion(ahora());
   } else {
-    avisos.decir("Has terminado. ¡Bien hecho!");
+    avisos.decir(DICE_FIN_DIA);
     $("fin-texto").textContent = "Has terminado " + diaPorId(crono.ej.grupo).titulo.split("—")[0].trim() + ". ¡Bien hecho!";
     $("fin-siguiente").hidden = true;
     crono.transicionFin = 0;
@@ -380,7 +427,7 @@ function tickTransicion(t) {
     crono.transicionAvisada = true;
     $("fin-cuenta-txt").textContent = "Cuando quieras, al siguiente.";
     avisos.fase("cambio");
-    avisos.decir("Cuando quieras, al siguiente");
+    avisos.decir(DICE_A_SIGUIENTE);
   }
 }
 
@@ -455,6 +502,7 @@ function iniciarApp() {
   });
   $("pref-voz-id").addEventListener("change", function () {
     guardado.vozId = avisos.prefs.vozId = this.value; guardar();
+    $("fila-velocidad").hidden = this.value === "";
     avisos.probar();
   });
   $("pref-velocidad").addEventListener("change", function () {

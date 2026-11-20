@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Ejercicios">
 
-<link rel="stylesheet" href="styles.css?v=1.2">
+<link rel="stylesheet" href="styles.css?v=1.3">
 </head>
 <body>
 
@@ -40,22 +40,23 @@
       <label class="fila-ajuste"><span>Voz que avisa</span><input type="checkbox" id="pref-voz"></label>
       <label class="fila-ajuste"><span>Contar las repeticiones<br><small>«uno, dos, tres…» al ritmo de cada ejercicio</small></span><input type="checkbox" id="pref-contar"></label>
       <label class="fila-ajuste"><span>Voz</span>
-        <select id="pref-voz-id"><option value="">La más natural que haya</option></select>
+        <select id="pref-voz-id"><option value="">Álvaro, grabada (la mejor)</option></select>
       </label>
-      <label class="fila-ajuste"><span>Velocidad de la voz</span>
+      <label class="fila-ajuste" id="fila-velocidad"><span>Velocidad de la voz</span>
         <select id="pref-velocidad">
           <option value="0.75">Lenta</option>
           <option value="0.85">Normal</option>
           <option value="0.95">Algo rápida</option>
+          <option value="1.05">Rápida</option>
         </select>
       </label>
       <div class="fila-ajuste">
         <span>Escucha cómo suena</span>
         <button type="button" class="btn-probar" id="pref-probar">🔊 Probar</button>
       </div>
-      <p class="nota">¿Suena a robot? En el iPhone puedes descargar una voz mejor: Ajustes →
-        Accesibilidad → Contenido leído → Voces → Español (España) → Mónica o Jorge →
-        «Mejorada». Después, si aparece en la lista de arriba, elígela.</p>
+      <p class="nota">Safari no deja usar las voces que descargas en el iPhone, por eso los
+        avisos van grabados con la voz de Álvaro. Si alguna frase no estuviera grabada, la
+        dice la voz del móvil.</p>
       <div class="fila-ajuste">
         <span>Segundos por repetición<br><small>Con tempo lento, súbelo</small></span>
         <span class="paso">
@@ -137,10 +138,11 @@
 
 <div id="visor" class="visor" hidden><img id="visor-img" alt=""></div>
 
-<script src="data/ejercicios.js?v=1.2"></script>
-<script src="js/version.js?v=1.2"></script>
-<script src="js/pautas.js?v=1.2"></script>
-<script src="js/sonido.js?v=1.2"></script>
-<script src="js/app.js?v=1.2"></script>
+<script src="data/ejercicios.js?v=1.3"></script>
+<script src="data/voces.js?v=1.3"></script>
+<script src="js/version.js?v=1.3"></script>
+<script src="js/pautas.js?v=1.3"></script>
+<script src="js/sonido.js?v=1.3"></script>
+<script src="js/app.js?v=1.3"></script>
 </body>
 </html>

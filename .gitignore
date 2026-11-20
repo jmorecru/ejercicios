@@ -13,5 +13,6 @@ CONTEXTO_PRIVADO.md
 *.xlsx
 *.pdf
 
-# Copia temporal del banco de pruebas
+# Copias temporales del banco de pruebas y del generador de voces
 _pruebas.html
+_frases.html

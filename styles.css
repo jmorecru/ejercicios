@@ -80,6 +80,7 @@ button { font: inherit; cursor: pointer; }
   padding: 8px 0; border-top: 1px solid var(--borde);
 }
 .fila-ajuste:first-of-type { border-top: 0; }
+.fila-ajuste[hidden] { display: none; }
 .fila-ajuste small { color: var(--suave); }
 .fila-ajuste input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--acento); }
 .fila-ajuste select {

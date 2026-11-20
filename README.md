@@ -41,6 +41,7 @@ scripts clásicos para que la app también se abra con doble clic (`file://`).
 | [js/sonido.js](js/sonido.js) | Pitidos, voz, vibración y pantalla encendida |
 | [js/app.js](js/app.js) | Pantallas, navegación por `#/dia/…` y `#/ej/…`, y el temporizador |
 | [js/version.js](js/version.js) | La versión que se ve en pantalla |
+| [data/voces.js](data/voces.js) | Qué audio de `audio/voz/` corresponde a cada frase. Lo genera `pruebas/voces.py` |
 
 ### La pauta de cada ejercicio
 
@@ -62,7 +63,12 @@ del plan y desde la ficha se puede subir: así se progresa.
   audio mudo mientras corre el temporizador.
 - La web no puede vibrar en iPhone; por eso el aviso es también de color y de voz.
 - Safari en iPhone **no deja usar las voces descargadas** en Ajustes (las
-  «mejoradas»): a las webs solo les da las básicas. Es una limitación de WebKit.
+  «mejoradas»): a las webs solo les da las básicas, que suenan a robot. Es una
+  limitación de WebKit. Por eso **los avisos van grabados** con una voz natural
+  (Álvaro, de Microsoft) en `audio/voz/`, una frase por fichero, y suenan por Web
+  Audio como los pitidos, así que también se oyen con el interruptor de silencio.
+  Si falta alguna frase, o la app se abre con doble clic (donde no se pueden cargar
+  los audios), la dice la voz del móvil.
 - iOS ofrece en español voces "de efecto" (Eddy, Flo, Abuela…) que suenan a robot y a
   menudo salen las primeras. La app las descarta y elige la más natural, prefiriendo
   las *mejoradas* si están descargadas. En los ajustes se puede elegir otra voz y la
@@ -87,7 +93,21 @@ powershell -File pruebas\correr.ps1
 
 Abre la app en Edge sin ventana y comprueba los datos, los pasos de cada ejercicio, las
 pantallas y el temporizador con un reloj falso que recorre los 31 ejercicios en
-milisegundos. Los iconos se regeneran con `powershell -File pruebas\iconos.ps1`.
+milisegundos. También comprueba que todas las frases que puede decir la app están
+grabadas. Los iconos se regeneran con `powershell -File pruebas\iconos.ps1`.
+
+### Voz grabada
+
+**Siempre que cambien los ejercicios o las frases**, hay que volver a grabar:
+
+```
+pip install edge-tts truststore
+python pruebas\voces.py
+```
+
+Saca de la propia app la lista de frases, graba solo las nuevas con la voz
+`es-ES-AlvaroNeural` (velocidad −5 %), borra las que ya no se usan y reescribe
+`data/voces.js`. Si no se hace, las pruebas avisan de las frases sin grabar.
 
 ---
 

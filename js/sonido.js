@@ -17,10 +17,10 @@ const avisos = (function () {
   let mudo = null;
   let candado = null;
   let quiereCandado = false;
-  // vozId: voiceURI elegida a mano ("" = la mejor que haya).
-  // velocidad: rate de la voz; en iPhone 1 ya suena deprisa.
+  // vozId: "" = la grabada; "auto" = la mejor del movil; si no, su voiceURI.
+  // velocidad: rate de la voz del movil; en iPhone 1 ya suena deprisa.
   // contar: decir en voz alta el numero de cada repeticion.
-  const prefs = { sonido: true, voz: true, vozId: "", velocidad: 0.85, contar: true };
+  const prefs = { sonido: true, voz: true, vozId: "", velocidad: 0.95, contar: true };
 
   function wavMudo() {
     const n = 4000; // medio segundo a 8 kHz, 8 bits
@@ -47,9 +47,7 @@ const avisos = (function () {
     return ctx;
   }
 
-  // Llamar desde un toque del usuario.
-  function activar() {
-    contexto();
+  function sonarMudo() {
     try {
       if (!mudo) {
         mudo = document.createElement("audio");
@@ -60,6 +58,12 @@ const avisos = (function () {
       const pr = mudo.play();
       if (pr && pr.catch) pr.catch(function () {});
     } catch (e) {}
+  }
+
+  // Llamar desde un toque del usuario.
+  function activar() {
+    contexto();
+    sonarMudo();
     try {
       // En iOS la voz tambien hay que estrenarla dentro del toque.
       if (prefs.voz && window.speechSynthesis) {
@@ -74,6 +78,7 @@ const avisos = (function () {
   function desactivar() {
     try { if (mudo) mudo.pause(); } catch (e) {}
     clearTimeout(pendiente);
+    callarGrabada();
     try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
     pantallaEncendida(false);
   }
@@ -133,11 +138,89 @@ const avisos = (function () {
     return texto.replace(/\s*\([^)]*\)/g, "").replace(/\s*·\s*/g, ". ").trim();
   }
 
-  let pendiente = null;
-  function hablar(texto, sinCortar) {
+  // ---------- Voz grabada ----------
+  //
+  // Safari en iPhone no deja usar las voces buenas que se descargan en Ajustes,
+  // asi que las frases van grabadas con una voz natural (Alvaro) en
+  // audio/voz/, una por frase, y data/voces.js dice que fichero es cada una
+  // (lo genera pruebas/voces.py). Suenan por Web Audio, igual que los pitidos:
+  // asi tambien se oyen con el interruptor de silencio puesto.
+  //
+  // Los ficheros se piden al abrir la ficha y se decodifican al pulsar
+  // Empezar (hace falta el AudioContext). Si una frase no esta grabada o no se
+  // puede cargar (por ejemplo, abriendo con doble clic), la dice la voz del movil.
+  const RUTA_VOZ = "audio/voz/";
+  const clips = {};
+  let fuentes = [];
+  let libreEn = 0;     // momento (reloj del AudioContext) en que acaba lo que suena
+  let turno = 0;       // cada frase nueva invalida a las que estaban cargando
+
+  function usaGrabada() {
+    return prefs.vozId === "" && typeof VOCES !== "undefined";
+  }
+
+  function traer(k) {
+    if (clips[k]) return clips[k];
+    const id = typeof VOCES !== "undefined" && VOCES[k];
+    if (!id || !window.fetch) return null;
+    const c = clips[k] = { buf: null, fallo: false, decod: null };
+    c.datos = fetch(RUTA_VOZ + id + ".mp3")
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); });
+    c.datos.catch(function () { c.fallo = true; });
+    return c;
+  }
+
+  function decodificar(c) {
+    if (c.buf) return Promise.resolve(c.buf);
+    if (!c.decod) {
+      c.decod = c.datos.then(function (ab) {
+        return new Promise(function (ok, ko) {
+          const x = contexto();
+          if (!x) { ko(new Error("sin audio")); return; }
+          // Forma con callbacks: la de promesa no esta en Safari antiguos.
+          x.decodeAudioData(ab.slice(0), function (b) { c.buf = b; ok(b); }, ko);
+        });
+      });
+      c.decod.catch(function () { c.decod = null; });
+    }
+    return c.decod;
+  }
+
+  function precargar(textos) {
+    if (!usaGrabada()) return;
+    (textos || []).forEach(function (t) {
+      const c = traer(paraLeer(t));
+      if (c && ctx) decodificar(c).catch(function () {});
+    });
+  }
+
+  function callarGrabada() {
+    turno++;
+    fuentes.forEach(function (f) { try { f.stop(); } catch (e) {} });
+    fuentes = [];
+    libreEn = 0;
+  }
+
+  function sonarClip(buf, detras) {
+    const x = contexto();
+    if (!x) return;
+    const f = x.createBufferSource();
+    f.buffer = buf;
+    f.connect(x.destination);
+    const t = Math.max(x.currentTime + 0.02, detras ? libreEn : 0);
+    f.start(t);
+    libreEn = t + buf.duration;
+    fuentes.push(f);
+    f.onended = function () { fuentes = fuentes.filter(function (g) { return g !== f; }); };
+  }
+
+  // ---------- Voz del movil ----------
+
+  function sintetizar(texto, sinCortar) {
+    if (!window.speechSynthesis) return;
     try {
       if (!sinCortar) speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(paraLeer(texto));
+      const u = new SpeechSynthesisUtterance(texto);
       u.lang = "es-ES";
       const v = vozElegida();
       if (v) { u.voice = v; u.lang = v.lang; }
@@ -147,28 +230,58 @@ const avisos = (function () {
     } catch (e) {}
   }
 
+  // sinCortar: no para lo que este sonando, se pone detras (para la cuenta).
+  function hablar(texto, sinCortar) {
+    const k = paraLeer(texto);
+    if (!sinCortar) {
+      callarGrabada();
+      try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
+    }
+    const c = usaGrabada() ? traer(k) : null;
+    if (!c || c.fallo) { sintetizar(k, sinCortar); return; }
+    if (c.buf) { sonarClip(c.buf, sinCortar); return; }
+    const mio = turno;
+    decodificar(c).then(function (buf) {
+      if (mio === turno) sonarClip(buf, sinCortar);
+    }, function () {
+      if (mio === turno) sintetizar(k, sinCortar);
+    });
+  }
+
+  let pendiente = null;
   // Con pitido, la voz entra justo despues para no pisarse con el.
   function decir(texto) {
-    if (!prefs.voz || !texto || !window.speechSynthesis) return;
+    if (!prefs.voz || !texto) return;
     clearTimeout(pendiente);
     if (prefs.sonido) pendiente = setTimeout(function () { hablar(texto); }, 450);
     else hablar(texto);
   }
 
   // El numero de la repeticion. No corta lo que se este diciendo (el "Serie 2
-  // de 3, vamos" del principio): se pone detras. Pero si ya hay algo esperando,
-  // se lo salta, para que la cuenta no se quede atrasada respecto al ritmo.
+  // de 3, vamos" del principio): se pone detras. Pero si lo de delante aun va
+  // para largo, se lo salta, para que la cuenta no se quede atrasada.
   function contar(n) {
-    if (!prefs.voz || !prefs.contar || !window.speechSynthesis) return;
-    try { if (speechSynthesis.pending) return; } catch (e) {}
+    if (!prefs.voz || !prefs.contar) return;
+    if (usaGrabada() && ctx) {
+      if (libreEn - ctx.currentTime > 0.7) return;
+    } else {
+      try { if (window.speechSynthesis && speechSynthesis.pending) return; } catch (e) {}
+    }
     hablar(String(n), true);
   }
 
-  // Desde un toque (boton "Probar"): sin espera, para que iOS la deje sonar.
+  // Desde un toque (boton "Probar"). Con la voz del movil, sin espera, para
+  // que iOS la deje sonar. Con la grabada, el audio mudo se pone un momento
+  // para que se oiga aunque este puesto el interruptor de silencio.
+  const FRASE_PRUEBA = "Serie 2 de 3 · lado izquierdo · Vamos";
   function probar() {
-    if (!window.speechSynthesis) return;
     clearTimeout(pendiente);
-    hablar("Serie 2 de 3 · lado izquierdo · Vamos");
+    if (usaGrabada()) {
+      contexto();
+      sonarMudo();
+      setTimeout(function () { if (!quiereCandado && mudo) mudo.pause(); }, 5000);
+    }
+    hablar(FRASE_PRUEBA);
   }
 
   async function pantallaEncendida(si) {
@@ -206,6 +319,10 @@ const avisos = (function () {
     desactivar: desactivar,
     decir: decir,
     probar: probar,
+    precargar: precargar,
+    // Para las pruebas: si la frase ya esta cargada y lista para sonar.
+    clipListo: function (t) { const c = clips[paraLeer(t)]; return !!(c && c.buf); },
+    FRASE_PRUEBA: FRASE_PRUEBA,
     contar: contar,
     vocesEs: vocesEs,
     vozElegida: vozElegida,

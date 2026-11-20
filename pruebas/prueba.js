@@ -182,11 +182,23 @@
     avisos.prefs.vozId = "ya-no-existe";
     log("si la elegida desaparece, vuelve a la mejor: " + ok(avisos.vozElegida().voiceURI === "jorge-m"));
     pintarInicio();
-    log("los ajustes listan 3 voces y la automatica: " + ok($("pref-voz-id").options.length === 4));
-    log("la automatica dice cual es: " + ok(/Jorge/.test($("pref-voz-id").options[0].text)));
+    log("los ajustes listan la grabada, la automatica y 3 voces: " + ok($("pref-voz-id").options.length === 5));
+    log("la automatica dice cual es: " + ok(/Jorge/.test($("pref-voz-id").options[1].text)));
     log("velocidad normal por defecto: " + ok($("pref-velocidad").value === "0.85"));
     speechSynthesis.getVoices = original;
     avisos.prefs.vozId = "";
+  });
+
+  prueba("voz grabada", function () {
+    log("[voz grabada]");
+    const sinGrabar = frasesGrabables().filter(function (k) { return !VOCES[k]; });
+    log("todas las frases de la app estan grabadas: " + ok(sinGrabar.length === 0) + (sinGrabar.length ? " faltan: " + sinGrabar.slice(0, 5).join(" | ") : ""));
+    const subidas = PLAN.ejercicios.every(function (e) {
+      return frasesDe(e, { reps: 25, mantener: 9 }).every(function (t) { return !!VOCES[avisos.paraLeer(t)]; });
+    });
+    log("tambien subiendo las repeticiones: " + ok(subidas));
+    log("no sobra ninguna grabacion: " + ok(Object.keys(VOCES).length === frasesGrabables().length));
+    log("la voz grabada es la de por defecto: " + ok($("pref-voz-id").value === "" && $("fila-velocidad").hidden));
   });
 
   prueba("contador", function () {

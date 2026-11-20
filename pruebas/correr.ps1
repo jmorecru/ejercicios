@@ -22,6 +22,11 @@ $faltan = @([regex]::Matches($datos, '"imagen": "([^"]+)"') | ForEach-Object { $
             Where-Object { -not (Test-Path (Join-Path $raiz $_)) })
 "[imagenes] todas las de los datos existen: " + $(if ($faltan.Count -eq 0) { "OK" } else { "*** MAL *** " + ($faltan -join ", ") })
 
+$voces = [IO.File]::ReadAllText((Join-Path $raiz "data\voces.js"), $utf8)
+$sinAudio = @([regex]::Matches($voces, ': "([0-9a-f]{12})"') | ForEach-Object { $_.Groups[1].Value } |
+              Where-Object { -not (Test-Path (Join-Path $raiz "audio\voz\$_.mp3")) })
+"[voces] todos los audios del indice existen: " + $(if ($sinAudio.Count -eq 0) { "OK" } else { "*** MAL *** " + ($sinAudio -join ", ") })
+
 $html   = [IO.File]::ReadAllText((Join-Path $raiz "index.html"), $utf8)
 $prueba = [IO.File]::ReadAllText((Join-Path $PSScriptRoot "prueba.js"), $utf8)
 [IO.File]::WriteAllText($copia, $html.Replace("</body>", "<script>`n" + $prueba + "`n</script>`n</body>"), $utf8)
@@ -49,6 +54,7 @@ $lineas = $texto -split "`n" | ForEach-Object { $_.TrimEnd() }
 $malas  = @($lineas | Where-Object { $_ -cmatch "\*\*\* MAL \*\*\*|EXCEPCION" })
 $buenas = @($lineas | Where-Object { $_ -cmatch " OK$" })
 if ($faltan.Count -gt 0) { $malas += "imagenes" } else { $buenas += "imagenes" }
+if ($sinAudio.Count -gt 0) { $malas += "voces" } else { $buenas += "voces" }
 ""
 "comprobaciones: " + ($buenas.Count + $malas.Count) + " | fallos: " + $malas.Count
 if ($malas.Count -gt 0) { exit 1 }

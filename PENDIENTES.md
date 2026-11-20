@@ -1,6 +1,6 @@
 # Pendientes
 
-Última revisión: **20 de noviembre de 2026**. Versión: **1.2**, publicada en
+Última revisión: **20 de noviembre de 2026**. Versión: **1.3**, publicada en
 <https://jmorecru.github.io/ejercicios/>.
 
 > **Al desplegar, subir la versión.** `VERSION` y `VERSION_FECHA` en
@@ -17,7 +17,9 @@
    - que hable la voz. En la 1.0 sonaba **robótica y deprisa**; la 1.1 descarta las
      voces de efecto de iOS, baja la velocidad a 0,85, lee pausas en lugar de " · " y
      deja elegir voz y velocidad. **Safari no ofrece las voces descargadas** (se probó
-     con Marisol mejorada): la voz del iPhone seguirá siendo la básica;
+     con Marisol mejorada), así que la 1.3 lleva los avisos **grabados con Álvaro**
+     (elegida en Edge, «algo rápida»). Falta oírla en el iPhone, también con el
+     interruptor de silencio, y comprobar que la primera frase no llega tarde;
    - que el **contador de repeticiones** (1.2) vaya bien de ritmo y no se pise con los
      avisos;
    - que la pantalla no se apague durante un ejercicio;
@@ -26,11 +28,6 @@
 
 ## Ideas para más adelante
 
-- **Avisos grabados con voz natural**: como Safari no deja usar las voces buenas del
-  iPhone, generar en el ordenador las frases (fases, números, nombres de ejercicio)
-  con una voz natural en español de España y llevarlas como audio dentro de la app.
-  Pendiente de que el usuario la escuche (Edge en el PC, voz «Microsoft … Online
-  (Natural)») y decida.
 - **Modo sesión**: encadenar todos los ejercicios del día sin volver a la lista. Tiene
   más sentido en la movilidad, que son 7 ejercicios cortos seguidos.
 - **Funcionar sin conexión** con un *service worker*. No se ha puesto a propósito: con la
@@ -41,6 +38,8 @@
 
 ## Ya decidido
 
+- **Voz de los avisos: Álvaro grabado**, a velocidad «algo rápida» (−5 %). La eligió el
+  usuario probando en Edge. Se puede cambiar a una voz del móvil en los ajustes.
 - **Sin registro de entrenamientos**: lo pidió el usuario. Solo se guardan preferencias.
 - **El día se elige al abrir la app**, no va atado a días de la semana.
 - **Los ejercicios 13 (peso muerto rumano) y M6 (chin tuck)** llevan el aviso de
